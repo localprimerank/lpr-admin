@@ -21,8 +21,8 @@ const dashboardCards = [
   { label: 'Projects', key: 'projects', icon: FolderOpen, href: '/projects', loader: api.getProjects },
   { label: 'Blogs', key: 'blogs', icon: FileText, href: '/blogs', loader: api.getBlogs },
   { label: 'Clients', key: 'clients', icon: Users, href: '/clients', loader: api.getClients },
-  { label: 'Skills', key: 'skills', icon: ListChecks, href: '/skills', loader: api.getSkills },
-  { label: 'Stats', key: 'stats', icon: BarChart3, href: '/stats', loader: api.getStats },
+  // { label: 'Skills', key: 'skills', icon: ListChecks, href: '/skills', loader: api.getSkills },
+  // { label: 'Stats', key: 'stats', icon: BarChart3, href: '/stats', loader: api.getStats },
   { label: 'Testimonials', key: 'testimonials', icon: Star, href: '/testimonials', loader: api.getTestimonials },
   { label: 'Contacts', key: 'contacts', icon: MessageSquare, href: '/contacts', loader: api.getContacts },
 ];
