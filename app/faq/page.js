@@ -7,39 +7,34 @@ import Sidebar from '@/components/layout/Sidebar';
 import DataTable from '@/components/ui/DataTable';
 import FormFields from '@/components/ui/FormFields';
 import { api } from '@/lib/api';
+import { Plus, X, ArrowLeft } from 'lucide-react';
 
 const fieldConfigs = [
-  { name: 'title', label: 'Title', type: 'text', placeholder: 'Blending creativity with' },
-  { name: 'titleHighlight', label: 'Highlighted Title', type: 'text', placeholder: 'technical precision.' },
-  { name: 'image', label: 'Image', type: 'image' },
-  {
-    name: 'content',
-    label: 'Content',
-    type: 'textarea',
-    rows: 8,
-    placeholder: 'Use a blank line between paragraphs',
-  },
-  { name: 'stats', label: 'Stats / Tagline', type: 'text', placeholder: 'Optional highlight line' },
+  { name: 'question', label: 'Question', type: 'text', placeholder: 'Enter FAQ question' },
+  { name: 'answer', label: 'Answer', type: 'textarea', placeholder: 'Enter FAQ answer', rows: 4 },
+  { name: 'order', label: 'Sort Order', type: 'number', placeholder: '0' },
+  { name: 'visible', label: 'Visible', type: 'toggle' },
 ];
 
-// this is emptyform sec
-const emptyForm = {
-  title: '',
-  titleHighlight: '',
-  image: '',
-  content: '',
-  stats: '',
-};
+const columns = [
+  { header: 'Question', accessor: 'question' },
+  { header: 'Order', accessor: 'order' },
+  { header: 'Visible', accessor: 'visible', render: (val) => (val ? 'Yes' : 'No') },
+];
 
-
-export default function AboutPage() {
+export default function FAQPage() {
   const router = useRouter();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState(emptyForm);
+  const [formData, setFormData] = useState({
+    question: '',
+    answer: '',
+    order: 0,
+    visible: true,
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -50,8 +45,8 @@ export default function AboutPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await api.getAbout();
-      setData(res.data ? [res.data] : []);
+      const res = await api.getAllFAQs();
+      setData(res.data || []);
     } catch (err) {
       alert(`Failed to load: ${err.message}`);
     } finally {
@@ -60,23 +55,18 @@ export default function AboutPage() {
   };
 
   const openCreate = () => {
-    if (data.length > 0) {
-      openEdit(data[0]);
-      return;
-    }
     setEditingItem(null);
-    setFormData(emptyForm);
+    setFormData({ question: '', answer: '', order: 0, visible: true });
     setShowForm(true);
   };
 
   const openEdit = (item) => {
     setEditingItem(item);
     setFormData({
-      title: item.title || '',
-      titleHighlight: item.titleHighlight || '',
-      image: item.image || '',
-      content: item.content || '',
-      stats: item.stats || '',
+      question: item.question || '',
+      answer: item.answer || '',
+      order: item.order || 0,
+      visible: item.visible ?? true,
     });
     setShowForm(true);
   };
@@ -86,9 +76,9 @@ export default function AboutPage() {
     setSaving(true);
     try {
       if (editingItem) {
-        await api.updateAbout(editingItem._id, formData);
+        await api.updateFAQ(editingItem._id, formData);
       } else {
-        await api.createAbout(formData);
+        await api.createFAQ(formData);
       }
       setShowForm(false);
       fetchData();
@@ -100,85 +90,93 @@ export default function AboutPage() {
   };
 
   const handleDelete = async (item) => {
-    if (!confirm('Delete this About entry?')) return;
+    if (!confirm(`Delete "${item.question}"?`)) return;
     try {
-      await api.deleteAbout(item._id);
+      await api.deleteFAQ(item._id);
       fetchData();
     } catch (err) {
       alert(`Failed to delete: ${err.message}`);
     }
   };
 
-  const columns = [
-    { header: 'Title', accessor: 'title', render: (val) => val || '-' },
-    {
-      header: 'Image',
-      accessor: 'image',
-      render: (val) =>
-        val ? (
-          <img src={val} alt="About" className="w-16 h-16 object-cover rounded-lg" />
-        ) : (
-          '-'
-        ),
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
       <div className="lg:ml-64">
-        <Header title="About" />
+        <Header title="FAQ" />
         <main className="p-6">
           {!showForm ? (
             <>
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">About Section</h2>
-                  <p className="text-gray-500 text-sm">Manage the about content shown on the website</p>
+                  <h2 className="text-xl font-semibold text-gray-900">All FAQs</h2>
+                  <p className="text-gray-500 text-sm">Manage frequently asked questions</p>
                 </div>
                 <button
                   onClick={openCreate}
                   className="bg-primary hover:bg-primary/90 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors"
                 >
-                  <span className="text-xl">+</span> {data.length > 0 ? 'Edit About' : 'Add About'}
+                  <Plus size={20} />
+                  Add FAQ
                 </button>
               </div>
+
               {loading ? (
-                <div className="flex justify-center h-64">
+                <div className="flex items-center justify-center h-64">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
               ) : (
-                <DataTable data={data} columns={columns} onEdit={openEdit} onDelete={handleDelete} />
+                <DataTable
+                  data={data}
+                  columns={columns}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  searchable
+                />
               )}
             </>
           ) : (
             <div className="max-w-2xl mx-auto">
               <button
                 onClick={() => setShowForm(false)}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
               >
-                ← Back to list
+                <ArrowLeft size={20} />
+                Back to list
               </button>
+
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  {editingItem ? 'Edit About' : 'Create About'}
+                  {editingItem ? 'Edit FAQ' : 'Create FAQ'}
                 </h2>
+
+                {editingItem && (
+                  <div className="mb-4 text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
+                    <span className="font-medium">ID:</span> {editingItem._id}
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit}>
-                  <FormFields fields={formData} setFields={setFormData} config={{ fields: fieldConfigs, allowImages: true }} />
+                  <FormFields
+                    fields={formData}
+                    setFields={setFormData}
+                    config={{ fields: fieldConfigs }}
+                  />
+
                   <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
                     <button
                       type="button"
                       onClick={() => setShowForm(false)}
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                      className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={saving}
-                      className="flex-1 bg-primary text-white px-4 py-3 rounded-lg font-medium disabled:opacity-50"
+                      className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
-                      {saving ? 'Saving...' : 'Save About'}
+                      {saving ? 'Saving...' : editingItem ? 'Update FAQ' : 'Create FAQ'}
                     </button>
                   </div>
                 </form>

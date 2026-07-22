@@ -49,7 +49,7 @@ export default function ProjectsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await api.getProjects({ auth: false });
+      const res = await api.getProjects();
       setData(res.data || []);
     } catch (err) {
       alert(`Failed to load: ${err.message}`);

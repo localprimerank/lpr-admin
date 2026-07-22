@@ -15,17 +15,20 @@ export default function FormFields({ fields, setFields, config = {} }) {
   const [uploadingFields, setUploadingFields] = useState({});
 
   const handleArrayChange = (fieldName, index, value) => {
-    const updated = [...fields[fieldName]];
+    const current = Array.isArray(fields[fieldName]) ? fields[fieldName] : [];
+    const updated = [...current];
     updated[index] = value;
     setFields({ ...fields, [fieldName]: updated });
   };
 
   const addArrayItem = (fieldName) => {
-    setFields({ ...fields, [fieldName]: [...(fields[fieldName] || []), ''] });
+    const current = Array.isArray(fields[fieldName]) ? fields[fieldName] : [];
+    setFields({ ...fields, [fieldName]: [...current, ''] });
   };
 
   const removeArrayItem = (fieldName, index) => {
-    const updated = [...fields[fieldName]];
+    const current = Array.isArray(fields[fieldName]) ? fields[fieldName] : [];
+    const updated = [...current];
     updated.splice(index, 1);
     setFields({ ...fields, [fieldName]: updated });
   };
@@ -171,7 +174,7 @@ export default function FormFields({ fields, setFields, config = {} }) {
           </label>
           {renderField(field)}
           
-          {allowArray && arrayField === field.name && fields[field.name]?.length > 0 && (
+          {allowArray && arrayField === field.name && Array.isArray(fields[field.name]) && fields[field.name].length > 0 && (
             <div className="mt-3 space-y-2">
               {fields[field.name].map((item, index) => (
                 <div key={index} className="flex items-center gap-2">

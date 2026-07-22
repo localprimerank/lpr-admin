@@ -78,7 +78,7 @@ export default function ServicesPage() {
     setFormData({
       title: item.title || '',
       price: item.price || '',
-      features: item.features?.length ? item.features : [''],
+      features: Array.isArray(item.features) && item.features.length ? item.features : [''],
       image: item.image || '',
       imageAlt: item.imageAlt || '',
       buttonText: item.buttonText || 'Get in touch',
