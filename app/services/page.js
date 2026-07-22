@@ -91,9 +91,14 @@ export default function ServicesPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const featuresArray = Array.isArray(formData.features) 
+        ? formData.features 
+        : typeof formData.features === 'string' 
+          ? [formData.features] 
+          : [];
       const payload = {
         ...formData,
-        features: formData.features.filter((f) => f.trim() !== ''),
+        features: featuresArray.filter((f) => f.trim() !== ''),
       };
       if (editingItem) {
         await api.updateService(editingItem._id, payload);
