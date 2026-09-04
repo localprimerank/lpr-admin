@@ -21,8 +21,24 @@ const fieldConfigs = [
   { name: 'features', label: 'Features', type: 'textarea', placeholder: 'Feature description', allowArray: true, arrayField: 'features' },
   { name: 'image', label: 'Image', type: 'image' },
   { name: 'imageAlt', label: 'Image Alt Text', type: 'text', placeholder: 'Describe the image' },
+
+  // NEW: main video shown alongside the main image on the service page
+  { name: 'video', label: 'Video', type: 'video', placeholder: 'Video URL' },
+
+  // NEW: short description shown under the service title
+  { name: 'description', label: 'Short Description', type: 'textarea', placeholder: 'A short sentence or two shown right under the service title' },
+
+  // NEW: plain info block (no heading), shown right after the image/video
+  { name: 'aboutText', label: 'Info Block (shown after the media, no heading)', type: 'textarea', placeholder: 'Additional info about this service' },
+
   { name: 'buttonText', label: 'Button Text', type: 'text', placeholder: 'Get in touch' },
   { name: 'order', label: 'Sort Order', type: 'number', placeholder: '0' },
+
+  // NEW: Case Studies section
+  { name: 'caseStudyHeading', label: 'Case Study Heading', type: 'text', placeholder: 'CASE STUDIES' },
+  { name: 'caseStudyDescription', label: 'Case Study Description', type: 'textarea', placeholder: 'A short description of the case study' },
+  { name: 'caseStudyImage', label: 'Case Study Image', type: 'image' },
+  { name: 'caseStudyVideo', label: 'Case Study Video', type: 'video', placeholder: 'Video URL' },
 ];
 
 const columns = [
@@ -32,6 +48,23 @@ const columns = [
   { header: 'Order', accessor: 'order' },
 ];
 
+const emptyFormData = {
+  title: '',
+  price: '',
+  features: [''],
+  image: '',
+  imageAlt: '',
+  video: '',
+  description: '',
+  aboutText: '',
+  buttonText: 'Get in touch',
+  order: 0,
+  caseStudyHeading: '',
+  caseStudyDescription: '',
+  caseStudyImage: '',
+  caseStudyVideo: '',
+};
+
 export default function ServicesPage() {
   const router = useRouter();
   const [data, setData] = useState([]);
@@ -39,15 +72,7 @@ export default function ServicesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    price: '',
-    features: [''],
-    image: '',
-    imageAlt: '',
-    buttonText: 'Get in touch',
-    order: 0,
-  });
+  const [formData, setFormData] = useState(emptyFormData);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -69,7 +94,7 @@ export default function ServicesPage() {
 
   const openCreate = () => {
     setEditingItem(null);
-    setFormData({ title: '', price: '', features: [''], image: '', imageAlt: '', buttonText: 'Get in touch', order: 0 });
+    setFormData(emptyFormData);
     setShowForm(true);
   };
 
@@ -81,8 +106,15 @@ export default function ServicesPage() {
       features: Array.isArray(item.features) && item.features.length ? item.features : [''],
       image: item.image || '',
       imageAlt: item.imageAlt || '',
+      video: item.video || '',
+      description: item.description || '',
+      aboutText: item.aboutText || '',
       buttonText: item.buttonText || 'Get in touch',
       order: item.order || 0,
+      caseStudyHeading: item.caseStudyHeading || '',
+      caseStudyDescription: item.caseStudyDescription || '',
+      caseStudyImage: item.caseStudyImage || '',
+      caseStudyVideo: item.caseStudyVideo || '',
     });
     setShowForm(true);
   };
