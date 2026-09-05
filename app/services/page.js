@@ -12,7 +12,8 @@ import {
   X, 
   Trash2, 
   ArrowLeft,
-  GripVertical 
+  GripVertical,
+  Upload
 } from 'lucide-react';
 
 // Regular fields — handled by the existing FormFields component
@@ -126,6 +127,32 @@ export default function ServicesPage() {
       ...prev,
       caseStudies: prev.caseStudies.map((cs, i) => (i === idx ? { ...cs, [field]: value } : cs)),
     }));
+  };
+
+  // ── Real upload for case study image/video (same pattern as FormFields) ──
+  const [uploadingCS, setUploadingCS] = useState({}); // key: `${idx}-${field}` -> boolean
+
+  const handleCaseStudyUpload = async (e, idx, field) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const key = `${idx}-${field}`;
+    const uploadFormData = new FormData();
+    uploadFormData.append('image', file); // backend field name is always "image", regardless of file type
+
+    setUploadingCS((prev) => ({ ...prev, [key]: true }));
+    try {
+      const data = await api.uploadImage(uploadFormData);
+      if (data.success) {
+        updateCaseStudy(idx, field, data.url);
+      } else {
+        alert('Upload failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Upload failed: ' + err.message);
+    } finally {
+      setUploadingCS((prev) => ({ ...prev, [key]: false }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -283,25 +310,67 @@ export default function ServicesPage() {
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                              <input
-                                type="text"
-                                value={cs.image}
-                                onChange={(e) => updateCaseStudy(idx, 'image', e.target.value)}
-                                placeholder="https://..."
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                              />
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                              {uploadingCS[`${idx}-image`] ? (
+                                <div className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-primary/40 rounded-lg bg-white">
+                                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
+                                  <span className="text-xs text-primary font-medium">Uploading...</span>
+                                </div>
+                              ) : cs.image ? (
+                                <div className="relative inline-block">
+                                  <img src={cs.image} alt="Preview" className="w-28 h-28 object-cover rounded-lg border border-gray-200" />
+                                  <button
+                                    type="button"
+                                    onClick={() => updateCaseStudy(idx, 'image', '')}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary hover:bg-white transition-colors bg-white">
+                                  <Upload size={20} className="text-gray-400 mb-1" />
+                                  <span className="text-xs text-gray-500">Click to upload image</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => handleCaseStudyUpload(e, idx, 'image')}
+                                  />
+                                </label>
+                              )}
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
-                              <input
-                                type="text"
-                                value={cs.video}
-                                onChange={(e) => updateCaseStudy(idx, 'video', e.target.value)}
-                                placeholder="https://..."
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                              />
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Video</label>
+                              {uploadingCS[`${idx}-video`] ? (
+                                <div className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-primary/40 rounded-lg bg-white">
+                                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
+                                  <span className="text-xs text-primary font-medium">Uploading...</span>
+                                </div>
+                              ) : cs.video ? (
+                                <div className="relative inline-block">
+                                  <video src={cs.video} controls className="w-48 h-28 object-cover rounded-lg border border-gray-200 bg-black" />
+                                  <button
+                                    type="button"
+                                    onClick={() => updateCaseStudy(idx, 'video', '')}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary hover:bg-white transition-colors bg-white">
+                                  <Upload size={20} className="text-gray-400 mb-1" />
+                                  <span className="text-xs text-gray-500">Click to upload video</span>
+                                  <input
+                                    type="file"
+                                    accept="video/*"
+                                    className="hidden"
+                                    onChange={(e) => handleCaseStudyUpload(e, idx, 'video')}
+                                  />
+                                </label>
+                              )}
                             </div>
                           </div>
                         </div>
