@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, X, Plus, Trash2, GripVertical } from 'lucide-react';
+import { Upload, X, Plus, Trash2, GripVertical, Video as VideoIcon } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function FormFields({ fields, setFields, config = {} }) {
@@ -33,15 +33,19 @@ export default function FormFields({ fields, setFields, config = {} }) {
     setFields({ ...fields, [fieldName]: updated });
   };
 
-  const handleImageUpload = async (e, fieldName) => {
+  // Works for both images and videos — the backend's upload endpoint
+  // auto-detects the file type via Cloudinary's resource_type: "auto".
+  // The multipart field name must stay "image" since that's what
+  // upload.single("image") expects on the backend, regardless of file type.
+  const handleFileUpload = async (e, fieldName) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     const formData = new FormData();
     formData.append('image', file);
 
     setUploadingFields((prev) => ({ ...prev, [fieldName]: true }));
-    
+
     try {
       const data = await api.uploadImage(formData);
       if (data.success) {
@@ -51,7 +55,7 @@ export default function FormFields({ fields, setFields, config = {} }) {
       }
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Image upload failed: ' + error.message);
+      alert('Upload failed: ' + error.message);
     } finally {
       setUploadingFields((prev) => ({ ...prev, [fieldName]: false }));
     }
@@ -144,8 +148,39 @@ export default function FormFields({ fields, setFields, config = {} }) {
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
                 <Upload size={24} className="text-gray-400 mb-2" />
                 <span className="text-sm text-gray-500">Click to upload image</span>
-                <span className="text-xs text-gray-400 mt-0.5">JPG, PNG, WebP up to 10MB</span>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, field.name)} />
+                <span className="text-xs text-gray-400 mt-0.5">JPG, PNG, WebP up to 200MB</span>
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, field.name)} />
+              </label>
+            )}
+          </div>
+        );
+
+      // NEW: real video upload, same pattern as images
+      case 'video':
+        return (
+          <div>
+            {uploadingFields[field.name] ? (
+              <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-primary/40 rounded-lg bg-primary/5">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
+                <span className="text-sm text-primary font-medium">Uploading...</span>
+              </div>
+            ) : value ? (
+              <div className="relative inline-block">
+                <video src={value} controls className="w-64 h-36 object-cover rounded-lg border border-gray-200 bg-black" />
+                <button
+                  type="button"
+                  onClick={() => setFields({ ...fields, [field.name]: '' })}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                <VideoIcon size={24} className="text-gray-400 mb-2" />
+                <span className="text-sm text-gray-500">Click to upload video</span>
+                <span className="text-xs text-gray-400 mt-0.5">MP4, WebM, MOV up to 200MB</span>
+                <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, field.name)} />
               </label>
             )}
           </div>
